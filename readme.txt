@@ -2,3 +2,6 @@ dhcpcd.conf used for setting static ip to 192.168.0.10 (may need to changed depe
 	sudo cp /etc/dhcpcd.conf
 	reboot
 only needs to run once
+
+for i2c (likely already on board)
+	sudo apt install -y i2c-tools
