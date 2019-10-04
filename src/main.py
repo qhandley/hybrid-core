@@ -1,10 +1,9 @@
 import os, signal
+import smbus
 import time
 import RPi.GPIO as GPIO
 import board
 import busio
-import adafruit_ads1x15.ads1115 as ADS
-from adafruit_ads1x15.analog_in import AnalogIn
 
 #define variables
 CH1 = 4 #7
@@ -37,7 +36,7 @@ def child(Command = 0):
             '''
             start_time = time.perf_counter()
             print("Start Ignition")
-            while GPIO.input(CH1) == GPIO.HIGH: 
+            while False: #GPIO.input(CH1) == GPIO.HIGH: 
                 if time.perf_counter() - start_time < 20:
                     GPIO.output(CH2, GPIO.HIGH)
                 else:
@@ -45,9 +44,6 @@ def child(Command = 0):
                     reset(0)
                     os._exit(1)
             GPIO.output(CH4, GPIO.HIGH)
-            i2c = busio.I2C(board.SCL, board.SDA)
-            ads = ADS.ADS1115(i2c)
-            chan = AnalogIn(ads, ADS.P0)
             while chan.value > 512:
                 print("Reading pressure sensor value!")
                 #log files
