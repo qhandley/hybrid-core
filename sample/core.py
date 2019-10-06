@@ -1,9 +1,7 @@
 import os, signal
-import smbus
-import time
 import RPi.GPIO as GPIO
-import board
-import busio
+import time
+import adc
 
 #define variables
 CH1 = 17#17
@@ -18,6 +16,9 @@ GPIO.setup(CH1, GPIO.IN)
 GPIO.setup(CH2, GPIO.OUT, initial=GPIO.LOW)
 GPIO.setup(CH3, GPIO.IN)
 GPIO.setup(CH4, GPIO.OUT, initial=GPIO.LOW)
+
+#Reading/logging adc values
+adc = adc.ADC()
 
 def reset(child_pid):
     print("resetting")
@@ -37,6 +38,7 @@ def child(Command = 0):
             if GPIO.input(CH1) == GPIO.LOW:
                 print("ERROR: Burn wire cut")
                 os._exit(1)
+
             start_time = time.perf_counter()
             print("Start Ignition")
             while GPIO.input(CH1) == GPIO.HIGH: 
@@ -47,9 +49,8 @@ def child(Command = 0):
                     reset(0)
                     os._exit(1)
             GPIO.output(CH4, GPIO.HIGH)
-            while chan.value > 512:
+            while adc.read() > 1.5:
                 print("Reading pressure sensor value!")
-                #log files
             GPIO.output(CH4, GPIO.LOW)
             break
 
@@ -57,18 +58,22 @@ def child(Command = 0):
             print("Ignition On")
             GPIO.output(CH2, GPIO.HIGH)
             break
+
         elif Command == "3":
             print("Ignition OFF")
             GPIO.output(CH2, GPIO.LOW)
             break
+
         elif Command == "4":
             print("Valve Open")
             GPIO.output(CH4, GPIO.HIGH)
             break
+
         elif Command == "5":
             print("Valve Closed")
             GPIO.output(CH4, GPIO.LOW)
             break
+
         elif Command == "h":
             print("1: Ignition Sequence")
             print("2: Ignition ON")
@@ -78,6 +83,7 @@ def child(Command = 0):
             print("abort: kill process")
             print("exit: exit program")
             break
+
         else:
             print("ERROR: Invalid Input")
             break
@@ -109,6 +115,7 @@ def parent():
                     if newpid == 0:
                         child(user_input)
         time.sleep(.1)
+
 signal.signal(signal.SIGINT, INT_handler)
 parent()
 GPIO.cleanup()

@@ -46,6 +46,7 @@ class ADC:
         val = self.bus.read_i2c_block_data(self.i2c_adr, self.ads_reg_cnv, 2)
         result = (val[0] << 8) + val[1] # MSB + LSB
         result = (result / (2**15)) * 4.096 # Adjust for scaling
+        self.log(result)
         return result
 
 if __name__ == "__main__":
@@ -54,5 +55,4 @@ if __name__ == "__main__":
     while(True):
         val = adc.read()
         print(val)
-        adc.log(val)
         time.sleep(1)
