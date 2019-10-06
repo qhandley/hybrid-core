@@ -2,11 +2,12 @@ import os, signal
 import RPi.GPIO as GPIO
 import time
 import adc
+import shifter
 
 #define variables
-CH1 = 17#17
+CH1 = 17 #17
 CH2 = 18 #18
-CH3 = 22#22
+CH3 = 22 #22
 CH4 = 23 #23
 
 #Configure Pins
@@ -18,7 +19,11 @@ GPIO.setup(CH3, GPIO.IN)
 GPIO.setup(CH4, GPIO.OUT, initial=GPIO.LOW)
 
 #Reading/logging adc values
-adc = adc.ADC()
+adc = adc.ADC(False)
+#shift = shifter.ShiftRegister()
+
+#ignition_on = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+#ignition_off = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 def reset(child_pid):
     print("resetting")
@@ -55,22 +60,24 @@ def child(Command = 0):
             break
 
         elif Command == "2":
-            print("Ignition On")
+            print("Ignition ON")
+            #shift.shift_16(ignition_on)
             GPIO.output(CH2, GPIO.HIGH)
             break
 
         elif Command == "3":
             print("Ignition OFF")
+            #shift.shift_16(ignition_off)
             GPIO.output(CH2, GPIO.LOW)
             break
 
         elif Command == "4":
-            print("Valve Open")
+            print("Valve OPEN")
             GPIO.output(CH4, GPIO.HIGH)
             break
 
         elif Command == "5":
-            print("Valve Closed")
+            print("Valve CLOSE")
             GPIO.output(CH4, GPIO.LOW)
             break
 
@@ -78,14 +85,14 @@ def child(Command = 0):
             print("1: Ignition Sequence")
             print("2: Ignition ON")
             print("3: Ignition OFF")
-            print("4: Open Valve")
-            print("5: Close Valve")
+            print("4: Valve OPEN")
+            print("5: Valve CLOSE")
             print("abort: kill process")
             print("exit: exit program")
             break
 
         else:
-            print("ERROR: Invalid Input")
+            print("ERROR: invalid input")
             break
     os._exit(0)
 
