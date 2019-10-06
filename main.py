@@ -6,10 +6,10 @@ import board
 import busio
 
 #define variables
-CH1 = 4 #7
-CH2 = 14 #8
-CH3 = 2 #3
-CH4 = 15 #10
+CH1 = 17#17
+CH2 = 18 #18
+CH3 = 22#22
+CH4 = 23 #23
 
 #Configure Pins
 GPIO.setwarnings(False) #silence setup warnings
@@ -26,17 +26,20 @@ def reset(child_pid):
     GPIO.output(CH2, GPIO.LOW)
     GPIO.output(CH4, GPIO.LOW)
 
+def INT_handler(sig, frame):
+    print("\nExiting Safely")
+    reset(0)
+    os._exit(1)
+
 def child(Command = 0):
     while True:
         if Command == "1":
-            '''
             if GPIO.input(CH1) == GPIO.LOW:
                 print("ERROR: Burn wire cut")
                 os._exit(1)
-            '''
             start_time = time.perf_counter()
             print("Start Ignition")
-            while False: #GPIO.input(CH1) == GPIO.HIGH: 
+            while GPIO.input(CH1) == GPIO.HIGH: 
                 if time.perf_counter() - start_time < 20:
                     GPIO.output(CH2, GPIO.HIGH)
                 else:
@@ -106,5 +109,6 @@ def parent():
                     if newpid == 0:
                         child(user_input)
         time.sleep(.1)
+signal.signal(signal.SIGINT, INT_handler)
 parent()
 GPIO.cleanup()
