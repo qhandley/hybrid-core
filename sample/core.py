@@ -141,5 +141,6 @@ def parent():
         time.sleep(.1)
 
 signal.signal(signal.SIGINT, INT_handler)
+signal.signal(signal.SIGHUP, INT_handler)
 parent()
 GPIO.cleanup()
