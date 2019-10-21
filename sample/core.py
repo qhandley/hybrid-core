@@ -78,13 +78,11 @@ def child(Command = 0):
 
         elif Command == "2":
             print("Ignition ON")
-            #shift.shift_16(ignition_on)
-            GPIO.output(CH2, GPIO.HIGH)
+            GPIO.output(CH2, GPIO.LOW)
             break
 
         elif Command == "3":
             print("Ignition OFF")
-            #shift.shift_16(ignition_off)
             GPIO.output(CH2, GPIO.HIGH)
             break
 
