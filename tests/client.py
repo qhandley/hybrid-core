@@ -67,6 +67,7 @@ input_thread = threading.Thread(target = get_input, daemon = True)
 #ui_thread = threading.Thread(target = ui_output, daemon = True)
 input_thread.start()
 #ui_thread.start()
+print("Input Command (h for help): ")
 while True:
     client.send(bytes(user_input, 'utf-8'))
     if (user_input=="a" or user_input == "kill"):
@@ -75,7 +76,6 @@ while True:
     if user_input != "0":
         user_input = "0"
     temp = client.recv(1024)
-    #print("from Server :", temp)
     if temp.decode() != "0":
         in_data = temp.decode()
         print(in_data)
