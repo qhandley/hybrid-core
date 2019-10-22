@@ -1,0 +1,14 @@
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\bin\Release\TestUI.exe
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\bin\Release\TestUI.pdb
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\TestUI.csprojAssemblyReference.cache
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\MainWindow.g.cs
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\App.g.cs
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\TestUI_MarkupCompile.cache
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\TestUI_MarkupCompile.lref
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\MainWindow.baml
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\TestUI.g.resources
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\TestUI.Properties.Resources.resources
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\TestUI.csproj.GenerateResource.cache
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\TestUI.csproj.CoreCompileInputs.cache
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\TestUI.exe
+C:\Users\Thomas Prihoda\Documents\!Personal\TestUI\TestUI\obj\Release\TestUI.pdb
