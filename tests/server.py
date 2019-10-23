@@ -12,25 +12,29 @@ import errno
 
 #define variables
 CH1 = 17 #17
-CH2 = 22 #18
-CH3 = 18 #22
-CH4 = 23 #23
+CH2 = 27 #18
+CH4 = 18 #23
 
 #Configure Pins
+global Ign, Val
 GPIO.setwarnings(False) #silence setup warnings
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(CH1, GPIO.IN)
 GPIO.setup(CH2, GPIO.OUT, initial=GPIO.HIGH)
-GPIO.setup(CH3, GPIO.IN)
+Ign = "0"
 GPIO.setup(CH4, GPIO.OUT, initial=GPIO.HIGH)
+Val = "0"
 
 #Reading/logging adc values
 #adc = adc.ADC(True)
 
 def reset():
-    csocket.send(bytes("Resetting",'utf-8'))
+    global msg, Ign, Val
+    msg = "Resetting"
     GPIO.output(CH2, GPIO.HIGH)
+    Ign = "0"
     GPIO.output(CH4, GPIO.HIGH)
+    Val = "0"
     print("resetting")
 
 def SIG_Handler(sig, frame):
@@ -54,11 +58,11 @@ def server_thread():
     print("Connection Established")
     print("Connection from : ", clientAddress)
     print(csocket.recv(1024))
-    csocket.send(bytes("What up", 'utf-8'))
     msg = "0"
     while True:
         data = csocket.recv(2048)
         data = data.decode()
+        print(data)
         if data == 'a':
             if threadID != 0:
                 stop_threads = 1
@@ -76,12 +80,19 @@ def server_thread():
             newthread = threading.Thread(target = Command_Response,args = (data), daemon = True)
             newthread.start()
             data = "0"
-        csocket.send(bytes(msg,'utf-8'))
-        msg = "0"
+        if GPIO.input(CH1) == GPIO.HIGH:
+            Burn = "0"
+        else:
+            Burn = "1"
+        Pre = "12"
+        data_out =""
+        data_out = msg +";"+ Ign +";"+ Val +";"+ Burn +";"+ Pre +";"
+        print(data_out)
+        csocket.send(bytes(data_out,'utf-8'))
     print("Connection Broken")
 
 def Command_Response(Command):
-    global msg
+    global msg, Ign, Val
     global threadID
     global stop_threads
     threadID = threading.get_ident()
@@ -110,6 +121,7 @@ def Command_Response(Command):
             while GPIO.input(CH1) == GPIO.LOW:
                 if time.perf_counter() - start_time < 10:
                     GPIO.output(CH2, GPIO.LOW)
+                    Ign = "1"
                 else:
                     msg = "ERROR: Ignition timeout"
                     print("ERROR: Ignition timeout")
@@ -118,9 +130,11 @@ def Command_Response(Command):
             msg = "Stop Ignition"
             print("Stop Ignition")
             GPIO.output(CH2, GPIO.HIGH)
+            Ign = "0"
             msg = "Opening the Valve"
             print("Opening the Valve")
             GPIO.output(CH4, GPIO.LOW)
+            Val = "1"
 
             msg = "Waiting for pressure build"
             print("Waiting for pressure build")
@@ -134,6 +148,7 @@ def Command_Response(Command):
             msg = "Closing the Valve"
             print("Closing the Valve")
             GPIO.output(CH4, GPIO.HIGH)
+            Val = "0"
             msg = "Ignition Sequence Complete"
             print("Ignition Sequence Complete")
             break
@@ -142,24 +157,28 @@ def Command_Response(Command):
             msg = "Ignition ON"
             print("Ignition ON")
             GPIO.output(CH2, GPIO.LOW)
+            Ign = "1"
             break
 
         elif Command == "3":
             msg = "Ignition OFF"
             print("Ignition OFF")
             GPIO.output(CH2, GPIO.HIGH)
+            Ign = "0"
             break
 
         elif Command == "4":
             msg = "Valve OPEN"
             print("Valve OPEN")
             GPIO.output(CH4, GPIO.LOW)
+            Val = "1"
             break
 
         elif Command == "5":
             msg = "Valve CLOSE"
             print("Valve CLOSE")
             GPIO.output(CH4, GPIO.HIGH)
+            Val = "0"
             break
         else:
             msg = "ERROR invalid input"
@@ -185,5 +204,7 @@ while True:
     except SocketError:
         print("EXCEPTION")
         GPIO.output(CH2, GPIO.HIGH)
+        Ign = "0"    
         GPIO.output(CH4, GPIO.HIGH)
+        Val = "0"
         print("resetting")
