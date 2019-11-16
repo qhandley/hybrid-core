@@ -6,7 +6,7 @@ import os
 import RPi.GPIO as GPIO
 import time
 sys.path.append("../sample/")
-#import adc
+import adc
 from socket import error as SocketError
 import errno
 
@@ -27,7 +27,7 @@ GPIO.setup(CH4, GPIO.OUT, initial=GPIO.HIGH)
 Val = "0"
 
 #Reading/logging adc values
-#adc = adc.ADC(True)
+adc = adc.ADC(True)
 
 def reset():
     global msg, Ign, Val
@@ -95,8 +95,8 @@ def server_thread():
                 Burn = "0"
             else:
                 Burn = "1"
-            Pre = str(round(12.12165135, 1))
-            #Pre = str(round(adc.read(), 1))
+            #Pre = str(round(12.12165135, 1))
+            Pre = str(round(adc.read(), 1))
             data_out =""
             data_out = msg +";"+ Ign +";"+ Val +";"+ Burn +";"+ Pre +";" + ERROR + ";"
             #print(data_out)
@@ -169,12 +169,14 @@ def Command_Response(Command):
 
             msg = "Waiting for pressure build"
             print("Waiting for pressure build")
-            #adc.set_ref_time()
-            while False: #adc.read() < 100:
+            adc.set_ref_time()
+            while adc.read() < 100:
                 pass
             msg = "Waiting for pressure drop"
             print("Waiting for pressure drop")
-            while False: #adc.read() > 70:
+            temp = adc.read()
+            while temp > 70 and temp < 900:
+                temp = adc.read()
                 pass
             msg = "Closing the Valve"
             print("Closing the Valve")
@@ -223,7 +225,7 @@ signal.signal(signal.SIGALRM, SIG_ALRM_Handler)
 signal.signal(signal.SIGINT, SIG_Handler)
 signal.signal(signal.SIGUSR1, SIG_USR_Handler)
 
-LOCALHOST = "192.168.0.10"
+LOCALHOST = "192.168.1.10"
 PORT = 8080
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

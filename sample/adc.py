@@ -21,7 +21,7 @@ class ADC:
 
         if(self.to_log == True):
             ts = time.gmtime()
-            self.log_file = time.strftime("%Y-%m-%d_%H:%M", ts) + ".txt"
+            self.log_file = "../psi_data/" + time.strftime("%m-%d-%H:%M:%S", ts) + ".txt"
             f = open(self.log_file, "x")
             f.close()
 
@@ -52,6 +52,7 @@ class ADC:
         result *= (256 / 2**15) # Convert to mV 
         result *= (14.5 / 0.475) # Convert to psi
         result -= 30 # Manual offset
+
         if(self.to_log == True):
             self.log(result)
         return result

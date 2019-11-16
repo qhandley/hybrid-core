@@ -2,28 +2,23 @@ import os, signal
 import RPi.GPIO as GPIO
 import time
 import adc
-import shifter
 
 #define variables
 CH1 = 17 #17
-CH2 = 22 #18
-CH3 = 18 #22
-CH4 = 23 #23
+CH2 = 27 #22
+#CH3 = 19 #22
+CH4 = 18 #23
 
 #Configure Pins
 GPIO.setwarnings(False) #silence setup warnings
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(CH1, GPIO.IN)
+#GPIO.setup(CH3, GPIO.IN)
 GPIO.setup(CH2, GPIO.OUT, initial=GPIO.HIGH)
-GPIO.setup(CH3, GPIO.IN)
 GPIO.setup(CH4, GPIO.OUT, initial=GPIO.HIGH)
 
 #Reading/logging adc values
 adc = adc.ADC(True)
-#shift = shifter.ShiftRegister()
-
-#ignition_on = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-#ignition_off = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
 def reset(child_pid):
     print("resetting")
@@ -43,6 +38,8 @@ def child(Command = 0):
             if GPIO.input(CH1) == GPIO.HIGH:
                 print("ERROR: Burn wire cut")
                 os._exit(1)
+
+            #Ignition countdown
             print("Three")
             time.sleep(1)
             print("Two")
@@ -53,25 +50,48 @@ def child(Command = 0):
             start_time = time.perf_counter()
             print("Start Ignition")
             while GPIO.input(CH1) == GPIO.LOW: 
-                if time.perf_counter() - start_time < 10:
+                if time.perf_counter() - start_time < 5:
                     GPIO.output(CH2, GPIO.LOW)
                 else:
                     print("ERROR: Ignition timeout")
                     reset(0)
                     os._exit(1)
-            print("Stop Ignition")
+
+            print("Stopping Igniter")
             GPIO.output(CH2, GPIO.HIGH)
             print("Opening the Valve")
             GPIO.output(CH4, GPIO.LOW)
             
             print("Waiting for pressure build")
+            start_time = time.perf_counter()
             adc.set_ref_time()
-            while adc.read() < 100:
-                pass    
+            psi = adc.read()
+
+            while psi < 220:
+                if time.perf_counter() - start_time < 2:
+                    psi = adc.read()
+                else:
+                    reset(0)
+                    print("Pressure Build Timeout")
+                    os._exit(1)
+                    break
+
+            #Reset timer
+            start_time = time.perf_counter()
             print("Waiting for pressure drop")
-            while adc.read() > 70:
-                pass
-            print("Closing the Valve")
+
+            while psi > 200:
+                if time.perf_counter() - start_time < 6 and psi < 900:
+                    psi = adc.read()
+                else:
+                    reset(0)
+                    if psi >= 900:
+                        print("Over Pressure Failure")
+                    else:
+                        print("Pressure Drop Timeout")
+                    os._exit(1)
+
+            print("Sequence Success: Closing the Valve")
             GPIO.output(CH4, GPIO.HIGH)
             print("Command (input h for help): ")
             break
@@ -139,6 +159,5 @@ def parent():
         time.sleep(.1)
 
 signal.signal(signal.SIGINT, INT_handler)
-signal.signal(signal.SIGHUP, INT_handler)
 parent()
 GPIO.cleanup()
