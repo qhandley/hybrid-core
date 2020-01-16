@@ -35,6 +35,7 @@ class ADC:
         # Configure for continuous mode, +/-0.256V scaling, AIN2 vs AIN3 
         new_cfg = cur_cfg 
         new_cfg[0] = 0b00111110 
+        new_ctf[1] = 0b11100011
         self.bus.write_i2c_block_data(self.i2c_adr, self.ads_reg_cfg, new_cfg)
 
     def set_ref_time(self):
@@ -51,7 +52,7 @@ class ADC:
         result = (val[0] << 8) + val[1] # MSB + LSB
         result *= (256 / 2**15) # Convert to mV 
         result *= (14.5 / 0.475) # Convert to psi
-        result -= 30 # Manual offset
+        result += 4 # Manual offset
 
         if(self.to_log == True):
             self.log(result)
