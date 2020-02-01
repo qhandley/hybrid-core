@@ -2,35 +2,34 @@ import os, signal
 import RPi.GPIO as GPIO
 import time
 import adc
-import shifter
 
 #define variables
-CH1 = 17 #17
-CH2 = 18 #18
-CH3 = 22 #22
-CH4 = 23 #23
+Burn_Wire = 17 #Burn Wire
+Igniter = 18 #Igniter
+Deluge = 24 #Deluge
+Valve = 23 #Valve
+Propane = 22 #Spare Relay (Propane solenoid)
 
 #Configure Pins
 GPIO.setwarnings(False) #silence setup warnings
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(CH1, GPIO.IN)
-GPIO.setup(CH2, GPIO.OUT, initial=GPIO.LOW)
-GPIO.setup(CH3, GPIO.IN)
-GPIO.setup(CH4, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(Burn_Wire, GPIO.IN)
+GPIO.setup(Igniter, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(Deluge, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(Valve, GPIO.OUT, initial=GPIO.LOW)
+GPIO.setup(Propane, GPIO.OUT, initial=GPIO.LOW)
 
 #Reading/logging adc values
-adc = adc.ADC(False)
-#shift = shifter.ShiftRegister()
-
-#ignition_on = [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-#ignition_off = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+adc = adc.ADC(True)
 
 def reset(child_pid):
     print("resetting")
     if child_pid != 0:
         os.kill(child_pid, signal.SIGKILL)
-    GPIO.output(CH2, GPIO.LOW)
-    GPIO.output(CH4, GPIO.LOW)
+    GPIO.output(Igniter, GPIO.LOW)
+    GPIO.output(Deluge, GPIO.LOW)
+    GPIO.output(Valve, GPIO.LOW)
+    GPIO.output(Propane, GPIO.LOW)
 
 def INT_handler(sig, frame):
     print("\nExiting Safely")
@@ -40,45 +39,114 @@ def INT_handler(sig, frame):
 def child(Command = 0):
     while True:
         if Command == "1":
-            if GPIO.input(CH1) == GPIO.LOW:
+            if GPIO.input(Burn_Wire) == GPIO.HIGH:
                 print("ERROR: Burn wire cut")
                 os._exit(1)
 
+            #Ignition countdown
+            print("Three")
+            time.sleep(1)
+            print("Two")
+            time.sleep(1)
+            print("One")
+            time.sleep(1)
+            
             start_time = time.perf_counter()
+            Deluge_timer = time.perf_counter()
+            Deluge_on = False
             print("Start Ignition")
-            while GPIO.input(CH1) == GPIO.HIGH: 
-                if time.perf_counter() - start_time < 20:
-                    GPIO.output(CH2, GPIO.HIGH)
+            while GPIO.input(Burn_Wire) == GPIO.LOW: 
+                if time.perf_counter() - start_time < 10:
+                    GPIO.output(Igniter, GPIO.HIGH)
+                    if time.perf_counter() - Deluge_timer > 1 and Deluge_on == False:
+                        print("Starting Deluge")
+                        Deluge_on = True
+                        GPIO.output(Deluge, GPIO.HIGH)
                 else:
                     print("ERROR: Ignition timeout")
                     reset(0)
                     os._exit(1)
-            GPIO.output(CH4, GPIO.HIGH)
-            while adc.read() > 1.5:
-                print("Reading pressure sensor value!")
-            GPIO.output(CH4, GPIO.LOW)
+
+            print("Stopping Igniter")
+            GPIO.output(Igniter, GPIO.LOW)
+            print("Starting Deluge")
+            GPIO.output(Deluge, GPIO.HIGH)
+            #print("Time to Ignite: " + str(time.perf_counter() - start_time))
+            print("Opening the Valve")
+            GPIO.output(Valve, GPIO.HIGH)
+            
+            print("Waiting for pressure build")
+            start_time = time.perf_counter()
+            adc.set_ref_time()
+            psi = adc.read()
+
+            while psi < 220:
+                if time.perf_counter() - start_time < 3:
+                    psi = adc.read()
+                else:
+                    reset(0)
+                    print("Pressure Build Timeout")
+                    os._exit(1)
+                    break
+
+            #Reset timer
+            start_time = time.perf_counter()
+            print("Waiting for pressure drop")
+
+            while psi > 200:
+                if time.perf_counter() - start_time < 6 and psi < 1000:
+                    psi = adc.read()
+                else:
+                    reset(0)
+                    if psi >= 900:
+                        print("Over Pressure Failure")
+                    else:
+                        print("Pressure Drop Timeout")
+                    os._exit(1)
+
+            print("Sequence Success: Closing the Valve")
+            GPIO.output(Valve, GPIO.LOW)
+            print("Command (input h for help): ")
             break
 
         elif Command == "2":
             print("Ignition ON")
-            #shift.shift_16(ignition_on)
-            GPIO.output(CH2, GPIO.HIGH)
+            GPIO.output(Igniter, GPIO.HIGH)
             break
 
         elif Command == "3":
             print("Ignition OFF")
-            #shift.shift_16(ignition_off)
-            GPIO.output(CH2, GPIO.LOW)
+            GPIO.output(Igniter, GPIO.LOW)
             break
 
         elif Command == "4":
             print("Valve OPEN")
-            GPIO.output(CH4, GPIO.HIGH)
+            GPIO.output(Valve, GPIO.HIGH)
             break
 
         elif Command == "5":
             print("Valve CLOSE")
-            GPIO.output(CH4, GPIO.LOW)
+            GPIO.output(Valve, GPIO.LOW)
+            break
+
+        elif Command == "6":
+            print("Deluge ON")
+            GPIO.output(Deluge, GPIO.HIGH)
+            break
+
+        elif Command == "7":
+            print("Deluge OFF")
+            GPIO.output(Deluge, GPIO.LOW)
+            break
+        
+        elif Command == "8":
+            print("Propane ON")
+            GPIO.output(Propane, GPIO.HIGH)
+            break
+
+        elif Command == "9":
+            print("Propane OFF")
+            GPIO.output(Propane, GPIO.LOW)
             break
 
         elif Command == "h":
@@ -87,7 +155,11 @@ def child(Command = 0):
             print("3: Ignition OFF")
             print("4: Valve OPEN")
             print("5: Valve CLOSE")
-            print("abort: kill process")
+            print("6: Deluge ON")
+            print("7: Deluge OFF")
+            print("8: Propane ON")
+            print("9: Propane OFF")
+            print("a: abort process")
             print("exit: exit program")
             break
 
@@ -100,7 +172,7 @@ def parent():
     newpid = 0
     while True:
         user_input = input("Command (input h for help): ")
-        if user_input == "abort":
+        if user_input == "a":
             print("aborting the children")
             reset(newpid)
             newpid = 0

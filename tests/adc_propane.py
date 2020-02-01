@@ -1,6 +1,5 @@
 import smbus
 import time
-from datetime import datetime
 
 class ADC:
     # i2c channel (/etc/i2c-x)
@@ -21,8 +20,8 @@ class ADC:
         self.to_log = to_log
 
         if(self.to_log == True):
-            ts = datetime.now().strftime("%Y-%m-%d_%M_%S")
-            self.log_file = "../psi_data/" + ts + ".txt"
+            ts = time.gmtime()
+            self.log_file = "../temperature_data/" + time.strftime("%m-%d-%H:%M:%S", ts) + ".txt"
             f = open(self.log_file, "x")
             f.close()
 
@@ -35,10 +34,9 @@ class ADC:
 
         # Configure for continuous mode, +/-0.256V scaling, AIN2 vs AIN3 
         new_cfg = cur_cfg 
-        #pressure transducer settings part 1
-        #new_cfg[0] = 0b00111110 #AIN3, AIN2
-        new_cfg[0] = 0b00001110 #AIN1,AIN0
-        #pressure transducer settings part 2
+        #thermocouple settings part 1
+        new_cfg[0] = 0b00111110 
+        #thermocouple settings part 2
         new_cfg[1] = 0b11100011
         self.bus.write_i2c_block_data(self.i2c_adr, self.ads_reg_cfg, new_cfg)
 
@@ -47,8 +45,7 @@ class ADC:
 
     def log(self, data):
         f = open(self.log_file, "a")
-        #ts = time.perf_counter() - self.start_time
-        ts = datetime.now().strftime("%H:%M:%S:%f")
+        ts = time.perf_counter() - self.start_time
         f.write('{0}, {1}\n'.format(ts, data))
         f.close()
 
@@ -58,9 +55,6 @@ class ADC:
         if(result >= 32768):
             result ^= ((2 ** 16) - 1)
             result = -1 *(result + 1)
-        result *= (256 / 2**15) # Convert to mV 
-        result *= (14.5 / 0.475) # Convert to psi
-        result += 4 # Manual offset
 
         if(self.to_log == True):
             self.log(result)
@@ -71,7 +65,7 @@ class ADC:
         return val
 
 if __name__ == "__main__":
-    adc = ADC()
+    adc = ADC(True)
 
     while(True):
         val = adc.read()
