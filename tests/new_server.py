@@ -11,10 +11,16 @@ from socket import error as SocketError
 import errno
 
 #define variables
+<<<<<<< HEAD
 CH1 = 17 #Burn Wire
 CH2 = 18 #Igniter
 CH3 = 24 #Deluge
 CH4 = 23 #Valve
+=======
+CH1 = 17 #17
+CH2 = 27 #18
+CH4 = 18 #23
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
 
 #Configure Pins
 global Ign, Val, ERROR
@@ -22,9 +28,15 @@ ERROR = "0"
 GPIO.setwarnings(False) #silence setup warnings
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(CH1, GPIO.IN)
+<<<<<<< HEAD
 GPIO.setup(CH2, GPIO.OUT, initial=GPIO.LOW)
 Ign = "0"
 GPIO.setup(CH4, GPIO.OUT, initial=GPIO.LOW)
+=======
+GPIO.setup(CH2, GPIO.OUT, initial=GPIO.HIGH)
+Ign = "0"
+GPIO.setup(CH4, GPIO.OUT, initial=GPIO.HIGH)
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
 Val = "0"
 
 #Reading/logging adc values
@@ -33,9 +45,15 @@ adc = adc.ADC(True)
 def reset():
     global msg, Ign, Val
     msg = "Resetting"
+<<<<<<< HEAD
     GPIO.output(CH2, GPIO.LOW)
     Ign = "0"
     GPIO.output(CH4, GPIO.LOW)
+=======
+    GPIO.output(CH2, GPIO.HIGH)
+    Ign = "0"
+    GPIO.output(CH4, GPIO.HIGH)
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
     Val = "0"
     print("resetting")
 
@@ -152,7 +170,11 @@ def Command_Response(Command):
             print("Start Ignition")
             while GPIO.input(CH1) == GPIO.LOW:
                 if time.perf_counter() - start_time < 10:
+<<<<<<< HEAD
                     GPIO.output(CH2, GPIO.HIGH)
+=======
+                    GPIO.output(CH2, GPIO.LOW)
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
                     Ign = "1"
                 else:
                     ERROR = "ERROR: Ignition timeout"
@@ -161,11 +183,19 @@ def Command_Response(Command):
                     return
             msg = "Stop Ignition"
             print("Stop Ignition")
+<<<<<<< HEAD
             GPIO.output(CH2, GPIO.LOW)
             Ign = "0"
             msg = "Opening the Valve"
             print("Opening the Valve")
             GPIO.output(CH4, GPIO.HIGH)
+=======
+            GPIO.output(CH2, GPIO.HIGH)
+            Ign = "0"
+            msg = "Opening the Valve"
+            print("Opening the Valve")
+            GPIO.output(CH4, GPIO.LOW)
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
             Val = "1"
 
             msg = "Waiting for pressure build"
@@ -181,7 +211,11 @@ def Command_Response(Command):
                 pass
             msg = "Closing the Valve"
             print("Closing the Valve")
+<<<<<<< HEAD
             GPIO.output(CH4, GPIO.LOW)
+=======
+            GPIO.output(CH4, GPIO.HIGH)
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
             Val = "0"
             msg = "Ignition Sequence Complete"
             print("Ignition Sequence Complete")
@@ -190,28 +224,44 @@ def Command_Response(Command):
         elif Command == "2":
             msg = "Ignition ON"
             print("Ignition ON")
+<<<<<<< HEAD
             GPIO.output(CH2, GPIO.HIGH)
+=======
+            GPIO.output(CH2, GPIO.LOW)
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
             Ign = "1"
             break
 
         elif Command == "3":
             msg = "Ignition OFF"
             print("Ignition OFF")
+<<<<<<< HEAD
             GPIO.output(CH2, GPIO.LOW)
+=======
+            GPIO.output(CH2, GPIO.HIGH)
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
             Ign = "0"
             break
 
         elif Command == "4":
             msg = "Valve OPEN"
             print("Valve OPEN")
+<<<<<<< HEAD
             GPIO.output(CH4, GPIO.HIGH)
+=======
+            GPIO.output(CH4, GPIO.LOW)
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
             Val = "1"
             break
 
         elif Command == "5":
             msg = "Valve CLOSE"
             print("Valve CLOSE")
+<<<<<<< HEAD
             GPIO.output(CH4, GPIO.LOW)
+=======
+            GPIO.output(CH4, GPIO.HIGH)
+>>>>>>> e171732815b4e2932e13c3b76866fa8df5909a59
             Val = "0"
             break
         else:

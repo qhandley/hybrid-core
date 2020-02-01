@@ -9,7 +9,6 @@ Igniter = 18 #Igniter
 Deluge = 24 #Deluge
 Valve = 23 #Valve
 Propane = 22 #Spare Relay (Propane solenoid)
-
 #Configure Pins
 GPIO.setwarnings(False) #silence setup warnings
 GPIO.setmode(GPIO.BCM)
